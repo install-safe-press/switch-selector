@@ -6,7 +6,7 @@
 const CONFIG = {
   // Google Sheets CSV 網址
   // 取得方式：Sheets → 檔案 → 共用 → 發布到網路 → 選「產品資料」工作表 → CSV → 複製網址
-  SHEET_URL: "https://docs.google.com/spreadsheets/d/YOUR_SHEET_ID/gviz/tq?tqx=out:csv&sheet=產品資料",
+  SHEET_URL: "https://docs.google.com/spreadsheets/d/1CM3TklL7dJ3OZ2zRLVnazPtnsmz2ENpk7ajmvm9a1AA/gviz/tq?tqx=out:csv&sheet=產品資料",
 
   // Claude API Proxy 網址（Cloudflare Workers）
   // 若尚未設定 Proxy，可先留空字串 "" 讓 LLM 功能暫時停用
