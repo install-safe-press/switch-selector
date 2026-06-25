@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>交換器選品工具</title>
+  <meta name="description" content="輸入需求，自動推薦最適合的 Dell、HPE、ZyXEL 網路交換器型號" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<!-- ── 頁首 ──────────────────────────────────────────────── -->
+<header class="page-header">
+  <div class="logo">Switch<span>Selector</span></div>
+  <div class="tagline">Dell・HPE・ZyXEL 交換器選品工具</div>
+</header>
+
+<!-- ── 主體 ──────────────────────────────────────────────── -->
+<main class="main-layout">
+
+  <!-- 左欄：篩選面板 -->
+  <aside class="filter-panel">
+    <div class="filter-panel-header">
+
+      <!-- 模式切換 -->
+      <div class="mode-tabs" role="tablist" aria-label="輸入方式">
+        <button class="mode-tab active" role="tab" aria-selected="true"
+                onclick="switchMode('menu')">選單篩選</button>
+        <button class="mode-tab" role="tab" aria-selected="false"
+                onclick="switchMode('llm')">描述需求</button>
+      </div>
+
+    </div>
+
+    <!-- 選單篩選面板 -->
+    <div id="panel-menu" class="panel show" role="tabpanel">
+
+      <div class="section-label">應用場景</div>
+      <div class="chip-group" role="group" aria-label="應用場景">
+        <button class="scene-chip active" data-val="office">辦公室 / 企業</button>
+        <button class="scene-chip" data-val="idc">機房 / IDC</button>
+        <button class="scene-chip" data-val="smb">中小企業</button>
+        <button class="scene-chip" data-val="av">影音監控</button>
+      </div>
+
+      <div class="section-label">規格需求</div>
+      <div class="filter-grid">
+        <div class="filter-item">
+          <label for="f-port">PORT 數量</label>
+          <select id="f-port">
+            <option value="0">不限</option>
+            <option value="8">8 port</option>
+            <option value="12">12 port</option>
+            <option value="24">24 port</option>
+            <option value="48">48 port</option>
+          </select>
+        </div>
+        <div class="filter-item">
+          <label for="f-speed">PORT 速度</label>
+          <select id="f-speed">
+            <option value="0">不限</option>
+            <option value="1">GbE（1G）</option>
+            <option value="2">Multi-Gig（2.5G）</option>
+            <option value="10">10GbE</option>
+          </select>
+        </div>
+        <div class="filter-item">
+          <label for="f-poe">POE 需求</label>
+          <select id="f-poe">
+            <option value="none">不需要</option>
+            <option value="poe+">PoE+（30W/port）</option>
+            <option value="poe++">PoE++（90W/port）</option>
+          </select>
+        </div>
+        <div class="filter-item">
+          <label for="f-mgmt">管理層級</label>
+          <select id="f-mgmt">
+            <option value="0">不限</option>
+            <option value="unmanaged">Unmanaged</option>
+            <option value="l2">L2 Managed</option>
+            <option value="l3">L3 Managed</option>
+          </select>
+        </div>
+        <div class="filter-item">
+          <label for="f-uplink">UPLINK</label>
+          <select id="f-uplink">
+            <option value="0">不限</option>
+            <option value="1">1G SFP</option>
+            <option value="10">10G SFP+</option>
+            <option value="25">25G SFP28</option>
+          </select>
+        </div>
+        <div class="filter-item">
+          <label for="f-brand">品牌</label>
+          <select id="f-brand">
+            <option value="all">全部品牌</option>
+            <option value="Dell">Dell</option>
+            <option value="HPE">HPE</option>
+            <option value="ZyXEL">ZyXEL</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- LLM 描述面板 -->
+    <div id="panel-llm" class="panel" role="tabpanel">
+
+      <div class="section-label">快速範例</div>
+      <div class="example-chips">
+        <button class="example-chip" onclick="fillExample(this)">
+          我有 30 台 IP 攝影機需要 PoE 供電
+        </button>
+        <button class="example-chip" onclick="fillExample(this)">
+          機房接入層，需要 10G uplink，不需要 PoE
+        </button>
+        <button class="example-chip" onclick="fillExample(this)">
+          辦公室 Wi-Fi 6 AP 部署，大概 20 台
+        </button>
+        <button class="example-chip" onclick="fillExample(this)">
+          小公司預算有限，24 port 就夠了
+        </button>
+      </div>
+
+      <div class="section-label">描述需求</div>
+      <div class="llm-textarea-wrap">
+        <textarea id="llm-input"
+          placeholder="用自己的話描述需求，例如：兩層樓各 15 台 AP，需要 PoE 集中管理，希望可以遠端監控…"
+          aria-label="需求描述輸入框"></textarea>
+        <div class="llm-footer">
+          <span>Claude AI 解析後自動篩選</span>
+          <button id="llm-btn" class="btn-parse" onclick="parseLLM()">解析需求 →</button>
+        </div>
+      </div>
+
+      <div id="llm-thinking" class="llm-thinking" aria-live="polite">
+        ⏳ 正在解析需求...
+      </div>
+      <div id="llm-parsed" class="llm-parsed" aria-live="polite"></div>
+
+    </div>
+  </aside>
+
+  <!-- 右欄：結果 -->
+  <section class="results-panel" aria-label="推薦結果">
+    <div class="results-header">
+      <h2 class="results-title">
+        推薦型號
+        <span class="result-count" id="result-count" aria-live="polite">0</span>
+      </h2>
+      <span class="result-subtitle" id="result-subtitle">依匹配度排序</span>
+    </div>
+    <div id="results" role="list" aria-label="推薦型號列表">
+      <div class="empty">
+        <div class="empty-icon">⏳</div>
+        <p>載入產品資料中…</p>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<!-- ── 頁尾 ──────────────────────────────────────────────── -->
+<footer class="page-footer">
+  © 2025 Your Company｜Dell・HPE・ZyXEL 授權代理商
+</footer>
+
+<!-- ── Scripts ────────────────────────────────────────────── -->
+<script src="config.js"></script>
+<script src="app.js"></script>
+
+</body>
+</html>
