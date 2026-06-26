@@ -151,7 +151,7 @@ function scoreProduct(p) {
 }
 
 // ── 渲染結果 ──────────────────────────────────────────────
-const MEDALS = ["🥇", "🥈", "🥉", "4", "5"];
+const MEDALS = ["🥇", "🥈", "🥉", "4", "5", "6", "7", "8", "9", "10"];
 
 function render() {
   const results = [];
