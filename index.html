@@ -47,18 +47,24 @@
 
       <div class="section-label">規格需求</div>
       <div class="filter-grid">
+
+        <!-- PORT 數量：涵蓋資料庫所有規格，用「以上」邏輯 -->
         <div class="filter-item">
           <label for="f-port">PORT 數量</label>
           <select id="f-port">
             <option value="0">不限</option>
-            <option value="8">8 port</option>
-            <option value="12">12 port</option>
-            <option value="24">24 port</option>
-            <option value="48">32 port</option>
-            <option value="48">48 port</option>
-            <option value="48">96 port</option>
+            <option value="5">5 port 以上</option>
+            <option value="8">8 port 以上</option>
+            <option value="12">12 port 以上</option>
+            <option value="16">16 port 以上</option>
+            <option value="24">24 port 以上</option>
+            <option value="28">28 port 以上</option>
+            <option value="48">48 port 以上</option>
+            <option value="96">96 port 以上</option>
           </select>
         </div>
+
+        <!-- PORT 速度：涵蓋 1G ~ 800G -->
         <div class="filter-item">
           <label for="f-speed">PORT 速度</label>
           <select id="f-speed">
@@ -68,11 +74,12 @@
             <option value="10">10GbE</option>
             <option value="25">25GbE</option>
             <option value="100">100GbE</option>
-            <option value="200">200GbE</option>
             <option value="400">400GbE</option>
-            <option value="800">800GbE</option>            
-            </select>
+            <option value="800">800GbE</option>
+          </select>
         </div>
+
+        <!-- PoE：維持三個固定值 -->
         <div class="filter-item">
           <label for="f-poe">POE 需求</label>
           <select id="f-poe">
@@ -81,15 +88,20 @@
             <option value="poe++">PoE++（90W/port）</option>
           </select>
         </div>
+
+        <!-- 管理層級：新增 L2+ -->
         <div class="filter-item">
           <label for="f-mgmt">管理層級</label>
           <select id="f-mgmt">
             <option value="0">不限</option>
             <option value="unmanaged">Unmanaged</option>
             <option value="l2">L2 Managed</option>
+            <option value="l2+">L2+ Smart</option>
             <option value="l3">L3 Managed</option>
           </select>
         </div>
+
+        <!-- Uplink：涵蓋 1G ~ 800G -->
         <div class="filter-item">
           <label for="f-uplink">UPLINK</label>
           <select id="f-uplink">
@@ -98,11 +110,12 @@
             <option value="10">10G SFP+</option>
             <option value="25">25G SFP28</option>
             <option value="100">100G QSFP28</option>
-            <option value="200">200G QSFP112</option>
             <option value="400">400G QSFP56-DD</option>
-            <option value="800">800G OSFP112</option>            
+            <option value="800">800G OSFP</option>
           </select>
         </div>
+
+        <!-- 品牌：大小寫與 CSV 完全一致 -->
         <div class="filter-item">
           <label for="f-brand">品牌</label>
           <select id="f-brand">
@@ -112,6 +125,7 @@
             <option value="ZyXEL">ZyXEL</option>
           </select>
         </div>
+
       </div>
     </div>
 
@@ -131,6 +145,9 @@
         </button>
         <button class="example-chip" onclick="fillExample(this)">
           小公司預算有限，24 port 就夠了
+        </button>
+        <button class="example-chip" onclick="fillExample(this)">
+          機房需要 400G Spine 交換器
         </button>
       </div>
 
