@@ -6,5 +6,5 @@
 const CONFIG = {
   SHEET_URL: "https://docs.google.com/spreadsheets/d/1CM3TklL7dJ3OZ2zRLVnazPtnsmz2ENpk7ajmvm9a1AA/gviz/tq?tqx=out:csv&gid=575058480",
   PROXY_URL: "",
-  MAX_RESULTS: 5
+  MAX_RESULTS: 30
 };
