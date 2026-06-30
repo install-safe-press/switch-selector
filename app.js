@@ -117,13 +117,27 @@ function scoreProduct(p) {
   };
   if (sceneMap[filters.scene]) score += 30;
 
-  // Port 數量（硬篩：不足直接排除）
-  if (filters.port > 0 && p.port_count < parseInt(filters.port)) return null;
-  score += filters.port > 0 ? 15 : 8;
+  // Port 數量（硬篩：不足直接排除；超出越多分數遞減，避免旗艦機種洗版）
+  if (filters.port > 0) {
+    if (p.port_count < parseInt(filters.port)) return null;
+    const ratio = p.port_count / parseInt(filters.port);
+    if (ratio <= 1.5) score += 15;       // 剛好或略大（1~1.5倍）
+    else if (ratio <= 3) score += 8;     // 偏大（1.5~3倍）
+    else score += 2;                      // 明顯過規格（3倍以上）
+  } else {
+    score += 8;
+  }
 
-  // Port 速度（硬篩）
-  if (filters.speed > 0 && p.port_speed < parseFloat(filters.speed)) return null;
-  score += filters.speed > 0 ? 15 : 8;
+  // Port 速度（硬篩：同樣邏輯，避免 1G 需求推薦 800G 旗艦）
+  if (filters.speed > 0) {
+    if (p.port_speed < parseFloat(filters.speed)) return null;
+    const ratio = p.port_speed / parseFloat(filters.speed);
+    if (ratio <= 2) score += 15;         // 同級或一級之內（如 1G→2.5G）
+    else if (ratio <= 10) score += 8;    // 跨兩三級（如 1G→10G）
+    else score += 2;                      // 明顯過規格（如 1G→100G+）
+  } else {
+    score += 8;
+  }
 
   // PoE 需求（硬篩）
   const poeOrder = { none: 0, "poe+": 1, "poe++": 2 };
