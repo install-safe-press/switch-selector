@@ -60,9 +60,13 @@ async function loadProducts() {
           portSpeed = 1; // fallback，避免日期格式破壞篩選
         }
 
-        // mgmt_level 正規化：「簡易網管」→ l2，數字→ l2
+        // mgmt_level 正規化：統一合併為 unmanaged / l2 / l2+ / l3 四種
+        // web、smart、簡易網管、純數字 → 一律歸類為 l2（基礎管理）
         let mgmt = (cols[8] || "l2").trim().toLowerCase();
-        if (mgmt === "簡易網管" || mgmt === "smart" || !isNaN(parseFloat(mgmt))) {
+        if (["web", "smart", "簡易網管"].includes(mgmt) || !isNaN(parseFloat(mgmt))) {
+          mgmt = "l2";
+        } else if (!["unmanaged", "l2", "l2+", "l3"].includes(mgmt)) {
+          // 其他未預期的值，保守 fallback 為 l2，避免篩選時整筆消失
           mgmt = "l2";
         }
 
@@ -84,7 +88,7 @@ async function loadProducts() {
           scene_idc:     cols[10] === "TRUE",
           scene_smb:     cols[11] === "TRUE",
           scene_av:      cols[12] === "TRUE",
-          highlights:    cols[13] ? cols[13].split(",").map((h) => h.trim()).filter(Boolean) : [],
+          highlights:    cols[13] ? cols[13].split("|").map((h) => h.trim()).filter(Boolean) : [],
           description:   (cols[14] || "").trim(),
           datasheet_url: (cols[15] || "").trim(),
           is_active:     cols[16] === "TRUE",
@@ -129,11 +133,14 @@ function scoreProduct(p) {
   score += needPoe > 0 ? 15 : 5;
 
   // 管理層級（硬篩）
-  // l2+ 介於 l2 與 l3 之間：選 l2 可看到 l2+，選 l3 看不到 l2
+  // unmanaged 是精確比對：選了就只顯示無網管機種，不向上相容
+  // l2/l2+/l3 維持「至少」邏輯：選 l2 可看到 l2+/l3，選 l3 只看 l3
+  if (filters.mgmt === "unmanaged" && p.mgmt_level !== "unmanaged") return null;
+
   const mgmtOrder = { unmanaged: 0, l2: 1, "l2+": 2, l3: 3 };
   const needMgmt = mgmtOrder[filters.mgmt] ?? -1;
   const hasMgmt  = mgmtOrder[p.mgmt_level] ?? 1;
-  if (needMgmt >= 0 && hasMgmt < needMgmt) return null;
+  if (filters.mgmt !== "unmanaged" && needMgmt >= 0 && hasMgmt < needMgmt) return null;
   score += needMgmt >= 0 ? 10 : 5;
 
   // Uplink（硬篩）
@@ -309,7 +316,7 @@ async function parseLLM() {
     const labelMap = {
       scene: { office: "辦公室", idc: "機房/IDC", smb: "中小企業", av: "影音監控" },
       poe:   { none: "不需 PoE", "poe+": "需要 PoE+", "poe++": "需要 PoE++" },
-      mgmt:  { "0": "管理不限", unmanaged: "Unmanaged", l2: "L2", "l2+": "L2+", l3: "L3" },
+      mgmt:  { "0": "管理不限", unmanaged: "無網管", l2: "基礎管理", "l2+": "進階管理", l3: "完整路由" },
     };
     const tags = [
       `場景：${labelMap.scene[filters.scene] || filters.scene}`,
