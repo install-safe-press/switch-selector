@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>交換器選品工具 — 操作說明</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+TC:wght@400;500;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --ink:#1a1d23;
+    --ink-soft:#52575f;
+    --ink-faint:#8a8f99;
+    --paper:#fbfaf7;
+    --panel:#ffffff;
+    --line:#e6e3da;
+    --accent:#c1502e;
+    --accent-soft:#f6e6df;
+    --teal:#2f6f63;
+    --teal-soft:#e3efec;
+    --navy:#2a3a5c;
+    --navy-soft:#e7ebf3;
+    --mono:'JetBrains Mono', monospace;
+    --sans:'Inter','Noto Sans TC',system-ui,sans-serif;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  html{scroll-behavior:smooth;}
+  body{
+    font-family:var(--sans);
+    background:var(--paper);
+    color:var(--ink);
+    line-height:1.6;
+    -webkit-font-smoothing:antialiased;
+  }
+
+  /* ── 頂部識別條 ───────────────────────────── */
+  .topband{
+    background:var(--ink);
+    color:#fff;
+    padding:7px 0;
+    font-size:11px;
+    letter-spacing:.12em;
+    text-transform:uppercase;
+    text-align:center;
+    font-family:var(--mono);
+    opacity:.85;
+  }
+
+  /* ── Hero ─────────────────────────────────── */
+  .hero{
+    max-width:920px;
+    margin:0 auto;
+    padding:56px 28px 40px;
+    border-bottom:1px solid var(--line);
+  }
+  .hero-eyebrow{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    font-family:var(--mono);
+    font-size:11px;
+    letter-spacing:.1em;
+    text-transform:uppercase;
+    color:var(--accent);
+    margin-bottom:18px;
+  }
+  .hero-eyebrow::before{
+    content:'';
+    width:18px; height:1px;
+    background:var(--accent);
+  }
+  .hero h1{
+    font-size:clamp(32px,5vw,44px);
+    font-weight:800;
+    letter-spacing:-.02em;
+    line-height:1.15;
+    margin-bottom:14px;
+  }
+  .hero h1 em{
+    font-style:normal;
+    color:var(--accent);
+  }
+  .hero p.lede{
+    font-size:16px;
+    color:var(--ink-soft);
+    max-width:560px;
+    margin-bottom:28px;
+  }
+  .hero-meta{
+    display:flex;
+    flex-wrap:wrap;
+    gap:24px;
+    font-size:12.5px;
+    color:var(--ink-faint);
+    font-family:var(--mono);
+  }
+  .hero-meta strong{color:var(--ink);font-weight:600;}
+
+  /* ── 章節導覽（橫向） ─────────────────────── */
+  .toc{
+    max-width:920px;
+    margin:0 auto;
+    padding:18px 28px;
+    display:flex;
+    gap:0;
+    overflow-x:auto;
+    border-bottom:1px solid var(--line);
+    background:var(--paper);
+    position:sticky;
+    top:0;
+    z-index:50;
+  }
+  .toc a{
+    flex-shrink:0;
+    font-size:12.5px;
+    font-weight:600;
+    color:var(--ink-faint);
+    text-decoration:none;
+    padding:8px 16px;
+    border-right:1px solid var(--line);
+    white-space:nowrap;
+    transition:color .15s;
+  }
+  .toc a:last-child{border-right:none;}
+  .toc a:hover{color:var(--accent);}
+  .toc a span{
+    font-family:var(--mono);
+    color:var(--accent);
+    margin-right:6px;
+  }
+
+  /* ── 主內容容器 ───────────────────────────── */
+  main{max-width:920px; margin:0 auto; padding:0 28px;}
+
+  section.block{
+    padding:52px 0;
+    border-bottom:1px solid var(--line);
+  }
+  section.block:last-of-type{border-bottom:none;}
+
+  .block-head{
+    display:flex;
+    align-items:baseline;
+    gap:14px;
+    margin-bottom:8px;
+  }
+  .block-num{
+    font-family:var(--mono);
+    font-size:13px;
+    color:var(--accent);
+    font-weight:600;
+  }
+  .block-head h2{
+    font-size:24px;
+    font-weight:700;
+    letter-spacing:-.01em;
+  }
+  .block-sub{
+    color:var(--ink-soft);
+    font-size:14.5px;
+    margin-bottom:28px;
+    max-width:600px;
+  }
+
+  /* ── 區塊：兩欄 ─────────────────────────────── */
+  .twocol{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:14px;
+  }
+  @media(max-width:680px){ .twocol{grid-template-columns:1fr;} }
+
+  /* ── 卡片元件 ───────────────────────────────── */
+  .card{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:20px 22px;
+  }
+  .card h3{
+    font-size:14.5px;
+    font-weight:700;
+    margin-bottom:8px;
+    display:flex;
+    align-items:center;
+    gap:8px;
+  }
+  .card p{font-size:13.5px; color:var(--ink-soft); line-height:1.65;}
+  .card p + p{margin-top:8px;}
+
+  .tagdot{
+    width:7px;height:7px;border-radius:50%;
+    display:inline-block;flex-shrink:0;
+  }
+  .dot-accent{background:var(--accent);}
+  .dot-teal{background:var(--teal);}
+  .dot-navy{background:var(--navy);}
+
+  /* ── 步驟流程 ───────────────────────────────── */
+  .flow{
+    display:flex;
+    flex-direction:column;
+    gap:0;
+  }
+  .flow-step{
+    display:grid;
+    grid-template-columns:44px 1fr;
+    gap:18px;
+    padding:18px 0;
+    border-top:1px solid var(--line);
+  }
+  .flow-step:first-child{border-top:none;}
+  .flow-step .num{
+    font-family:var(--mono);
+    font-size:20px;
+    font-weight:700;
+    color:var(--accent);
+    line-height:1.3;
+  }
+  .flow-step h4{
+    font-size:15px;
+    font-weight:700;
+    margin-bottom:5px;
+  }
+  .flow-step p{
+    font-size:13.5px;
+    color:var(--ink-soft);
+    line-height:1.6;
+  }
+  .flow-step .shot{
+    margin-top:10px;
+    background:var(--navy-soft);
+    border:1px dashed #b6c1d9;
+    border-radius:8px;
+    padding:10px 14px;
+    font-family:var(--mono);
+    font-size:12px;
+    color:var(--navy);
+  }
+
+  /* ── 欄位對照表 ───────────────────────────────── */
+  table{
+    width:100%;
+    border-collapse:collapse;
+    font-size:13px;
+  }
+  thead th{
+    text-align:left;
+    font-size:11px;
+    font-weight:700;
+    letter-spacing:.06em;
+    text-transform:uppercase;
+    color:var(--ink-faint);
+    padding:0 12px 10px;
+    border-bottom:2px solid var(--ink);
+  }
+  tbody td{
+    padding:11px 12px;
+    border-bottom:1px solid var(--line);
+    vertical-align:top;
+  }
+  tbody tr:hover td{background:#f4f2ec;}
+  .mono-cell{
+    font-family:var(--mono);
+    font-size:12px;
+    color:var(--accent);
+    font-weight:600;
+  }
+
+  /* ── 提示框 ───────────────────────────────────── */
+  .callout{
+    border-left:3px solid var(--accent);
+    background:var(--accent-soft);
+    padding:14px 18px;
+    border-radius:0 8px 8px 0;
+    font-size:13.5px;
+    color:#6b3420;
+    margin-top:18px;
+    line-height:1.6;
+  }
+  .callout.teal{
+    border-color:var(--teal);
+    background:var(--teal-soft);
+    color:#1d4940;
+  }
+  .callout strong{font-weight:700;}
+
+  /* ── LLM 範例氣泡 ─────────────────────────────── */
+  .bubbles{
+    display:flex;
+    flex-wrap:wrap;
+    gap:8px;
+    margin-top:16px;
+  }
+  .bubble{
+    background:#fff;
+    border:1px solid var(--line);
+    border-radius:20px;
+    padding:7px 14px;
+    font-size:12.5px;
+    color:var(--ink-soft);
+  }
+  .bubble::before{content:'"'; color:var(--accent); font-weight:700;}
+  .bubble::after{content:'"'; color:var(--accent); font-weight:700;}
+
+  /* ── 結果卡片示意 ─────────────────────────────── */
+  .result-demo{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:14px 18px;
+    display:flex;
+    align-items:center;
+    gap:14px;
+    margin-top:14px;
+  }
+  .result-demo .medal{font-size:22px;}
+  .result-demo .ddetail{flex:1;}
+  .result-demo .ddetail strong{font-size:14px; display:block; margin-bottom:3px;}
+  .result-demo .ddetail span{font-size:12px; color:var(--ink-faint); font-family:var(--mono);}
+  .result-demo .score{
+    font-family:var(--mono);
+    font-weight:700;
+    color:var(--teal);
+    font-size:15px;
+  }
+
+  /* ── FAQ ──────────────────────────────────────── */
+  .faq-item{
+    padding:18px 0;
+    border-top:1px solid var(--line);
+  }
+  .faq-item:first-child{border-top:none;}
+  .faq-q{
+    font-size:14.5px;
+    font-weight:700;
+    margin-bottom:6px;
+    display:flex;
+    gap:10px;
+  }
+  .faq-q::before{
+    content:'Q';
+    font-family:var(--mono);
+    color:var(--accent);
+    font-weight:800;
+  }
+  .faq-a{
+    font-size:13.5px;
+    color:var(--ink-soft);
+    padding-left:22px;
+    line-height:1.65;
+  }
+
+  /* ── 維護權責表 ───────────────────────────────── */
+  .role-grid{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:12px;
+    margin-top:20px;
+  }
+  @media(max-width:680px){ .role-grid{grid-template-columns:1fr;} }
+  .role-card{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:18px 18px 20px;
+  }
+  .role-card .role-icon{
+    font-family:var(--mono);
+    font-size:11px;
+    letter-spacing:.08em;
+    text-transform:uppercase;
+    color:#fff;
+    background:var(--navy);
+    display:inline-block;
+    padding:3px 9px;
+    border-radius:4px;
+    margin-bottom:12px;
+  }
+  .role-card h4{font-size:14.5px; margin-bottom:8px;}
+  .role-card ul{list-style:none; font-size:12.5px; color:var(--ink-soft);}
+  .role-card li{padding:3px 0; padding-left:14px; position:relative;}
+  .role-card li::before{
+    content:'—';
+    position:absolute; left:0;
+    color:var(--ink-faint);
+  }
+
+  /* ── 頁尾 ─────────────────────────────────────── */
+  footer{
+    max-width:920px;
+    margin:0 auto;
+    padding:36px 28px 56px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    font-size:12px;
+    color:var(--ink-faint);
+    font-family:var(--mono);
+  }
+
+  ::selection{background:var(--accent-soft); color:var(--accent);}
+
+  @media print{
+    .topband,.toc{display:none;}
+    section.block{break-inside:avoid; padding:24px 0;}
+  }
+</style>
+</head>
+<body>
+
+<div class="topband">INTERNAL USE · SWITCH SELECTOR OPERATION GUIDE</div>
+
+<div class="hero">
+  <div class="hero-eyebrow">操作說明書</div>
+  <h1>交換器選品工具<br/><em>一頁搞懂</em>怎麼用、怎麼維護</h1>
+  <p class="lede">這份文件給業務、PM、IT 內部使用，涵蓋客戶端如何篩選型號、AI 如何解析需求，以及後台資料怎麼更新、誰該負責什麼。</p>
+  <div class="hero-meta">
+    <span><strong>適用對象</strong> 業務 / 產品經理 / IT</span>
+    <span><strong>資料來源</strong> Google Sheets（即時同步）</span>
+    <span><strong>更新頻率</strong> 隨產品異動</span>
+  </div>
+</div>
+
+<nav class="toc">
+  <a href="#sec1"><span>01</span>工具總覽</a>
+  <a href="#sec2"><span>02</span>選單篩選</a>
+  <a href="#sec3"><span>03</span>AI 描述需求</a>
+  <a href="#sec4"><span>04</span>看懂推薦結果</a>
+  <a href="#sec5"><span>05</span>資料維護</a>
+  <a href="#sec6"><span>06</span>常見問題</a>
+</nav>
+
+<main>
+
+  <!-- 01 工具總覽 -->
+  <section class="block" id="sec1">
+    <div class="block-head"><span class="block-num">01</span><h2>工具總覽</h2></div>
+    <p class="block-sub">選品工具讓客戶或業務輸入需求，自動從 Dell、HPE、ZyXEL、Juniper 全品牌資料庫中比對出最適合的型號，取代過去翻型錄、人工比對規格的流程。</p>
+
+    <div class="twocol">
+      <div class="card">
+        <h3><span class="tagdot dot-accent"></span>兩種輸入方式</h3>
+        <p>「選單篩選」適合知道明確規格的使用者，「描述需求」讓不懂技術的人用一句話講需求，AI 自動轉換成篩選條件。</p>
+      </div>
+      <div class="card">
+        <h3><span class="tagdot dot-teal"></span>資料即時同步</h3>
+        <p>所有型號資料來自 Google Sheets，後台改資料、調權重、上下架，網頁 1–5 分鐘內自動反映，不需要重新部署。</p>
+      </div>
+      <div class="card">
+        <h3><span class="tagdot dot-navy"></span>匹配度排序</h3>
+        <p>每個型號依場景、規格符合度、業務主推權重計算分數，分數越高排越前面，最佳推薦會特別標示。</p>
+      </div>
+      <div class="card">
+        <h3><span class="tagdot dot-accent"></span>跨品牌比較</h3>
+        <p>同一份需求可以同時看到 Dell、HPE、ZyXEL、Juniper 的對應型號，方便依客戶偏好或庫存彈性調整推薦。</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 02 選單篩選 -->
+  <section class="block" id="sec2">
+    <div class="block-head"><span class="block-num">02</span><h2>選單篩選怎麼操作</h2></div>
+    <p class="block-sub">適合已經知道客戶需求規格的情境，六個欄位由左至右依序設定即可。</p>
+
+    <div class="flow">
+      <div class="flow-step">
+        <div class="num">1</div>
+        <div>
+          <h4>選擇應用場景</h4>
+          <p>辦公室／機房 IDC／中小企業／影音監控，四選一。場景符合度是匹配分數中佔比最高的項目，務必先選對。</p>
+        </div>
+      </div>
+      <div class="flow-step">
+        <div class="num">2</div>
+        <div>
+          <h4>設定 Port 數量與速度</h4>
+          <p>選「X port 以上」即可，系統會用「至少滿足」邏輯篩選，不會把規格更高的型號排除在外。</p>
+        </div>
+      </div>
+      <div class="flow-step">
+        <div class="num">3</div>
+        <div>
+          <h4>勾選 PoE 需求</h4>
+          <p>不需要／PoE+（30W）／PoE++（90W）。若客戶要接 AP 或 IP 攝影機，記得這項一定要選。</p>
+        </div>
+      </div>
+      <div class="flow-step">
+        <div class="num">4</div>
+        <div>
+          <h4>選擇管理層級</h4>
+          <p>「無網管」是精確比對，選了只會看到完全無網管的機種；「基礎管理」「進階管理」「完整路由」則是向上相容，選低階也看得到高階型號。</p>
+        </div>
+      </div>
+      <div class="flow-step">
+        <div class="num">5</div>
+        <div>
+          <h4>Uplink 與品牌（選填）</h4>
+          <p>若客戶指定品牌或已知 uplink 速度需求，可以一併設定縮小範圍；不確定可以保持「不限」。</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 03 AI 描述需求 -->
+  <section class="block" id="sec3">
+    <div class="block-head"><span class="block-num">03</span><h2>AI 描述需求怎麼操作</h2></div>
+    <p class="block-sub">適合客戶不懂技術術語、只描述使用情境的情況。切換到「描述需求」頁籤，用一句話講出需求，AI 會自動轉換成篩選條件。</p>
+
+    <div class="card">
+      <h3><span class="tagdot dot-accent"></span>輸入範例</h3>
+      <p>系統內建快速範例可以直接點選，也可以自己打字描述，AI 會判斷場景、Port 數、PoE 需求、速度與管理層級。</p>
+      <div class="bubbles">
+        <span class="bubble">我有 30 台 IP 攝影機需要 PoE 供電</span>
+        <span class="bubble">機房接入層，需要 10G uplink，不需要 PoE</span>
+        <span class="bubble">辦公室 Wi-Fi 6 AP 部署，大概 20 台</span>
+        <span class="bubble">機房需要 400G Spine 交換器</span>
+      </div>
+    </div>
+
+    <div class="callout">
+      <strong>解析後務必核對</strong> — AI 解析完會顯示綠色提示框列出「已解析條件」，這是給使用者確認 AI 理解是否正確的步驟，若條件不符可以切回「選單篩選」手動微調，不需要重新輸入描述。
+    </div>
+  </section>
+
+  <!-- 04 看懂推薦結果 -->
+  <section class="block" id="sec4">
+    <div class="block-head"><span class="block-num">04</span><h2>怎麼看推薦結果</h2></div>
+    <p class="block-sub">系統依匹配分數排序，最多顯示前 10 筆，第一名會特別標示「最佳推薦」。</p>
+
+    <div class="result-demo">
+      <div class="medal">🥇</div>
+      <div class="ddetail">
+        <strong>ZyXEL　XMG1930-30HP　<span style="color:var(--accent);font-weight:600;">最佳推薦</span></strong>
+        <span>24x 2.5G Multi-Gig PoE+ · 4x 10G uplink · 375W</span>
+      </div>
+      <div class="score">93%</div>
+    </div>
+
+    <div class="callout teal">
+      <strong>匹配分數怎麼算？</strong> — 場景符合度、規格符合度、業務主推權重（sort_weight）綜合計算。分數高不代表規格最頂級，而是「最符合這次篩選條件 + 業務策略」的綜合結果。
+    </div>
+  </section>
+
+  <!-- 05 資料維護 -->
+  <section class="block" id="sec5">
+    <div class="block-head"><span class="block-num">05</span><h2>後台資料怎麼維護</h2></div>
+    <p class="block-sub">所有型號資料在 Google Sheets「產品資料」工作表，改完存檔，網頁 1–5 分鐘內自動更新，不需要找工程師。</p>
+
+    <table>
+      <thead>
+        <tr><th>情境</th><th>怎麼做</th><th>影響欄位</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>新增型號</td>
+          <td>在最後一列新增資料，填好所有欄位</td>
+          <td class="mono-cell">全部欄位</td>
+        </tr>
+        <tr>
+          <td>型號暫時缺貨</td>
+          <td>找到該列，把這欄改成 FALSE，不要刪列</td>
+          <td class="mono-cell">is_active</td>
+        </tr>
+        <tr>
+          <td>本季主推某品牌</td>
+          <td>調高該品牌型號的權重數字（1–100）</td>
+          <td class="mono-cell">sort_weight</td>
+        </tr>
+        <tr>
+          <td>修正規格錯誤</td>
+          <td>直接修改對應欄位數值</td>
+          <td class="mono-cell">port_count / speed / poe…</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="role-grid">
+      <div class="role-card">
+        <span class="role-icon">產品經理</span>
+        <h4>規格與展示內容</h4>
+        <ul>
+          <li>新品上架填寫規格</li>
+          <li>highlights 與一句話推薦語</li>
+          <li>場景標籤勾選</li>
+        </ul>
+      </div>
+      <div class="role-card">
+        <span class="role-icon">業務主管</span>
+        <h4>排序與上下架</h4>
+        <ul>
+          <li>sort_weight 權重調整</li>
+          <li>is_active 上下架</li>
+          <li>每季檢視主推策略</li>
+        </ul>
+      </div>
+      <div class="role-card">
+        <span class="role-icon">IT / 工程</span>
+        <h4>網頁程式維護</h4>
+        <ul>
+          <li>新增篩選欄位選項</li>
+          <li>GitHub Pages 部署</li>
+          <li>Cloudflare Workers 設定</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- 06 FAQ -->
+  <section class="block" id="sec6">
+    <div class="block-head"><span class="block-num">06</span><h2>常見問題</h2></div>
+
+    <div class="faq-item">
+      <div class="faq-q">改完 Google Sheets，網頁怎麼還沒更新？</div>
+      <div class="faq-a">通常 1–5 分鐘內生效，若超過 10 分鐘沒反應，先確認 Sheets 是否已設為「知道連結的任何人可檢視」，再重新整理頁面（按 Ctrl+Shift+R 強制清快取）。</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q">為什麼調高 sort_weight，排序看起來沒變化？</div>
+      <div class="faq-a">場景與規格符合度的計分權重較高，sort_weight 主要在「同樣符合度」的型號之間做微調，不會讓規格完全不符合的型號排到前面。</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q">客戶想要的型號沒有出現在結果裡？</div>
+      <div class="faq-a">先確認該型號的 is_active 是否為 TRUE，再檢查篩選條件是否設得太嚴格（例如同時勾選高階規格 + 低預算品牌），可以先放寬條件再逐步收斂。</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q">AI 解析需求失敗或結果不準？</div>
+      <div class="faq-a">可能是 Cloudflare Workers 連線異常，或描述過於模糊。可以直接切回「選單篩選」手動操作，不影響選品功能。</div>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <span>SWITCH SELECTOR · INTERNAL GUIDE</span>
+  <span>v1.0</span>
+</footer>
+
+</body>
+</html>
