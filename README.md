@@ -59,7 +59,7 @@ Workers 程式碼範本請參考部署教學文件。
 
 ---
 
-## 詢價動作設定
+## 詢價動作設定（disable）
 
 `app.js` 中的 `handleInquiry()` 函式，預設開啟 Email。
 可修改為開啟 LINE、Google Form、或內部 CRM 連結。
