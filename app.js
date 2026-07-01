@@ -8,7 +8,7 @@ let allProducts = [];
 let filters = {
   scene: "office",
   port: 0,
-  speed: 0,
+  speed: 0,        // 0=不限, 1/10/25/100/400/800=固定速度, "multigig"=Multi-Gig
   poe: "none",
   mgmt: "0",
   uplink: 0,
@@ -60,13 +60,9 @@ async function loadProducts() {
           portSpeed = 1; // fallback，避免日期格式破壞篩選
         }
 
-        // mgmt_level 正規化：統一合併為 unmanaged / l2 / l2+ / l3 四種
-        // web、smart、簡易網管、純數字 → 一律歸類為 l2（基礎管理）
+        // mgmt_level 正規化：「簡易網管」→ l2，數字→ l2
         let mgmt = (cols[8] || "l2").trim().toLowerCase();
-        if (["web", "smart", "簡易網管"].includes(mgmt) || !isNaN(parseFloat(mgmt))) {
-          mgmt = "l2";
-        } else if (!["unmanaged", "l2", "l2+", "l3"].includes(mgmt)) {
-          // 其他未預期的值，保守 fallback 為 l2，避免篩選時整筆消失
+        if (mgmt === "簡易網管" || mgmt === "smart" || !isNaN(parseFloat(mgmt))) {
           mgmt = "l2";
         }
 
@@ -91,8 +87,9 @@ async function loadProducts() {
           highlights:    cols[13] ? cols[13].split("|").map((h) => h.trim()).filter(Boolean) : [],
           description:   (cols[14] || "").trim(),
           datasheet_url: (cols[15] || "").trim(),
-          is_active:     cols[16] === "TRUE",
-          sort_weight:   parseInt(cols[17]) || 50,
+          supports_multigig: cols[16] === "TRUE",   // 新增欄位 Q
+          is_active:     cols[17] === "TRUE",        // 原 Q → 現 R
+          sort_weight:   parseInt(cols[18]) || 50,  // 原 R → 現 S
         };
       })
       .filter((p) => p.is_active && p.model && p.brand);
@@ -117,24 +114,30 @@ function scoreProduct(p) {
   };
   if (sceneMap[filters.scene]) score += 30;
 
-  // Port 數量（硬篩：不足直接排除；超出越多分數遞減，避免旗艦機種洗版）
+  // Port 數量（鄰近度遞減：超出越多分數越低，避免旗艦機種洗版）
   if (filters.port > 0) {
     if (p.port_count < parseInt(filters.port)) return null;
     const ratio = p.port_count / parseInt(filters.port);
-    if (ratio <= 1.5) score += 15;       // 剛好或略大（1~1.5倍）
-    else if (ratio <= 3) score += 8;     // 偏大（1.5~3倍）
-    else score += 2;                      // 明顯過規格（3倍以上）
+    if (ratio <= 1.5) score += 15;      // 剛好或略大（1~1.5倍）
+    else if (ratio <= 3) score += 8;    // 偏大（1.5~3倍）
+    else score += 2;                     // 明顯過規格（3倍以上）
   } else {
     score += 8;
   }
 
-  // Port 速度（硬篩：同樣邏輯，避免 1G 需求推薦 800G 旗艦）
-  if (filters.speed > 0) {
+  // Port 速度（Multi-Gig 獨立路徑，不與其他速度混用倍數比較）
+  if (filters.speed === "multigig") {
+    // 選 Multi-Gig：只看 supports_multigig 欄位，不做數字大小比較
+    if (!p.supports_multigig) return null;
+    score += 15;
+  } else if (filters.speed > 0) {
+    // 選固定速度（1G / 10G / 25G / 100G+）：Multi-Gig 機種不參與 10G 以上比較
     if (p.port_speed < parseFloat(filters.speed)) return null;
+    if (p.supports_multigig && parseFloat(filters.speed) >= 10) return null;
     const ratio = p.port_speed / parseFloat(filters.speed);
-    if (ratio <= 2) score += 15;         // 同級或一級之內（如 1G→2.5G）
-    else if (ratio <= 10) score += 8;    // 跨兩三級（如 1G→10G）
-    else score += 2;                      // 明顯過規格（如 1G→100G+）
+    if (ratio <= 2) score += 15;       // 同級或一級之內
+    else if (ratio <= 10) score += 8;  // 跨兩三級
+    else score += 2;                    // 明顯過規格
   } else {
     score += 8;
   }
@@ -146,11 +149,8 @@ function scoreProduct(p) {
   if (needPoe > 0 && hasPoe === 0) return null;
   score += needPoe > 0 ? 15 : 5;
 
-  // 管理層級（硬篩）
-  // unmanaged 是精確比對：選了就只顯示無網管機種，不向上相容
-  // l2/l2+/l3 維持「至少」邏輯：選 l2 可看到 l2+/l3，選 l3 只看 l3
+  // 管理層級（unmanaged 精確比對；l2/l2+/l3 向上相容）
   if (filters.mgmt === "unmanaged" && p.mgmt_level !== "unmanaged") return null;
-
   const mgmtOrder = { unmanaged: 0, l2: 1, "l2+": 2, l3: 3 };
   const needMgmt = mgmtOrder[filters.mgmt] ?? -1;
   const hasMgmt  = mgmtOrder[p.mgmt_level] ?? 1;
@@ -223,6 +223,7 @@ function render() {
         <span class="score-badge">${p.score}%</span>
         <div class="card-actions">
           ${dsLink}
+          <button class="btn-inquiry" onclick="handleInquiry('${p.brand}', '${p.model}')">詢價</button>
         </div>
       </div>
     </div>`;
@@ -329,7 +330,7 @@ async function parseLLM() {
     const labelMap = {
       scene: { office: "辦公室", idc: "機房/IDC", smb: "中小企業", av: "影音監控" },
       poe:   { none: "不需 PoE", "poe+": "需要 PoE+", "poe++": "需要 PoE++" },
-      mgmt:  { "0": "管理不限", unmanaged: "無網管", l2: "基礎管理", "l2+": "進階管理", l3: "完整路由" },
+      mgmt:  { "0": "管理不限", unmanaged: "Unmanaged", l2: "L2", "l2+": "L2+", l3: "L3" },
     };
     const tags = [
       `場景：${labelMap.scene[filters.scene] || filters.scene}`,
@@ -361,7 +362,12 @@ async function parseLLM() {
   }
 }
 
-// (詢價功能已移除)
+// ── 詢價動作 ──────────────────────────────────────────────
+function handleInquiry(brand, model) {
+  const subject = encodeURIComponent(`詢價：${brand} ${model}`);
+  const body    = encodeURIComponent(`您好，我想詢問以下產品的報價與庫存：\n\n品牌：${brand}\n型號：${model}\n\n請提供報價，謝謝。`);
+  window.location.href = `mailto:sales@yourcompany.com?subject=${subject}&body=${body}`;
+}
 
 // ── 初始化 ────────────────────────────────────────────────
 document.addEventListener("DOMContentLoaded", () => {
