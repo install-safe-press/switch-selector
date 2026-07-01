@@ -29,7 +29,7 @@
         <button class="mode-tab active" role="tab" aria-selected="true"
                 onclick="switchMode('menu')">選單篩選</button>
         <button class="mode-tab" role="tab" aria-selected="false"
-                onclick="switchMode('llm')">描述需求</button>
+                onclick="switchMode('llm')">描述需求(無啟用)</button>
       </div>
 
     </div>
@@ -64,13 +64,13 @@
           </select>
         </div>
 
-        <!-- PORT 速度：Multi-Gig 獨立選項，不與固定速度混排 -->
+        <!-- PORT 速度：涵蓋 1G ~ 800G -->
         <div class="filter-item">
           <label for="f-speed">PORT 速度</label>
           <select id="f-speed">
             <option value="0">不限</option>
             <option value="1">GbE（1G）</option>
-            <option value="multigig">Multi-Gig（Wi-Fi 6/7 AP 用）</option>
+            <option value="2">Multi-Gig（2.5G）</option>
             <option value="10">10GbE</option>
             <option value="25">25GbE</option>
             <option value="100">100GbE</option>
@@ -89,15 +89,15 @@
           </select>
         </div>
 
-        <!-- 管理層級：新增 L2+ -->
+        <!-- 管理層級：合併為四種，web/smart 統一歸類為「基礎管理」 -->
         <div class="filter-item">
           <label for="f-mgmt">管理層級</label>
           <select id="f-mgmt">
             <option value="0">不限</option>
-            <option value="unmanaged">Unmanaged</option>
-            <option value="l2">L2 Managed</option>
-            <option value="l2+">L2+ Smart</option>
-            <option value="l3">L3 Managed</option>
+            <option value="unmanaged">無網管</option>
+            <option value="l2">基礎管理（Smart/Web）</option>
+            <option value="l2+">進階管理（L2+）</option>
+            <option value="l3">完整路由（L3）</option>
           </select>
         </div>
 
