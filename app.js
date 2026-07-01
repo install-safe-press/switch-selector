@@ -91,7 +91,7 @@ async function loadProducts() {
           highlights:        cols[13] ? cols[13].split("|").map((h) => h.trim()).filter(Boolean) : [],
           description:       (cols[14] || "").trim(),
           datasheet_url:     (cols[15] || "").trim(),
-          supports_multigig: supportsMultigig,   // 暫由 port_speed 判斷
+          supports_multigig: portSpeed === 2.5,   // 暫由 port_speed 判斷
           is_active:         cols[16] === "TRUE", // col[16]
           sort_weight:       parseInt(cols[17])  || 50, // col[17]
         };
