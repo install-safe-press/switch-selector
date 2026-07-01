@@ -88,7 +88,7 @@ async function loadProducts() {
           scene_idc:         cols[10] === "TRUE",
           scene_smb:         cols[11] === "TRUE",
           scene_av:          cols[12] === "TRUE",
-          highlights:        cols[13] ? cols[13].split("|").map((h) => h.trim()).filter(Boolean) : [],
+          highlights:        cols[13] ? cols[13].split(/[|,]/).map((h) => h.trim()).filter(Boolean) : [],
           description:       (cols[14] || "").trim(),
           datasheet_url:     (cols[15] || "").trim(),
           supports_multigig: portSpeed === 2.5,   // 暫由 port_speed 判斷
