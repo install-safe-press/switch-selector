@@ -29,7 +29,7 @@
         <button class="mode-tab active" role="tab" aria-selected="true"
                 onclick="switchMode('menu')">選單篩選</button>
         <button class="mode-tab" role="tab" aria-selected="false"
-                onclick="switchMode('llm')">描述需求(無啟用)</button>
+                onclick="switchMode('llm')">描述需求</button>
       </div>
 
     </div>
@@ -89,15 +89,15 @@
           </select>
         </div>
 
-        <!-- 管理層級：合併為四種，web/smart 統一歸類為「基礎管理」 -->
+        <!-- 管理層級：新增 L2+ -->
         <div class="filter-item">
           <label for="f-mgmt">管理層級</label>
           <select id="f-mgmt">
             <option value="0">不限</option>
-            <option value="unmanaged">無網管</option>
-            <option value="l2">基礎管理（Smart/Web）</option>
-            <option value="l2+">進階管理（L2+）</option>
-            <option value="l3">完整路由（L3）</option>
+            <option value="unmanaged">Unmanaged</option>
+            <option value="l2">L2 Managed</option>
+            <option value="l2+">L2+ Smart</option>
+            <option value="l3">L3 Managed</option>
           </select>
         </div>
 
@@ -168,6 +168,19 @@
       <div id="llm-parsed" class="llm-parsed" aria-live="polite"></div>
 
     </div>
+    <!-- 外部工具連結 -->
+    <div class="ext-tools">
+      <div class="section-label">廠商選品工具</div>
+      <a href="https://event.zyxel.com/Product_Selector/Switch/" target="_blank" class="ext-tool-link">
+        <div class="ext-tool-icon">🔗</div>
+        <div class="ext-tool-body">
+          <div class="ext-tool-name">ZyXEL 交換器選擇器</div>
+          <div class="ext-tool-desc">乙太網路交換器快速選擇工具</div>
+        </div>
+        <div class="ext-tool-arrow">↗</div>
+      </a>
+    </div>
+
   </aside>
 
   <!-- 右欄：結果 -->
@@ -191,7 +204,7 @@
 
 <!-- ── 頁尾 ──────────────────────────────────────────────── -->
 <footer class="page-footer">
-  © 2025 Your Company｜Dell・HPE・ZyXEL https://event.zyxel.com/Product_Selector/Switch/ 授權代理商
+  © 2025 Your Company｜Dell・HPE・ZyXEL 授權代理商
 </footer>
 
 <!-- ── Scripts ────────────────────────────────────────────── -->

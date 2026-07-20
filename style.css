@@ -494,6 +494,25 @@ select:focus { outline: 2px solid var(--blue-600); outline-offset: 1px; }
 
 .ds-link:hover { text-decoration: underline; }
 
+.btn-inquiry {
+  padding: 5px 12px;
+  background: #fff;
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--gray-800);
+  cursor: pointer;
+  transition: all .15s;
+  white-space: nowrap;
+}
+
+.btn-inquiry:hover {
+  background: var(--blue-600);
+  color: #fff;
+  border-color: var(--blue-600);
+}
+
 .more-hint {
   text-align: center;
   font-size: 12px;
@@ -523,4 +542,69 @@ select:focus { outline: 2px solid var(--blue-600); outline-offset: 1px; }
   color: var(--gray-400);
   border-top: 1px solid var(--gray-200);
   margin-top: 40px;
+}
+
+/* ── 外部工具連結區塊 ─────────────────────────────────────── */
+.ext-tools {
+  padding: 0 16px 16px;
+  border-top: 1px solid var(--gray-200);
+  margin-top: 4px;
+}
+
+.ext-tool-link {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-md);
+  background: var(--gray-50);
+  text-decoration: none;
+  color: var(--gray-800);
+  transition: all .15s;
+  margin-top: 6px;
+}
+
+.ext-tool-link:hover {
+  border-color: var(--zyxel-fg);
+  background: var(--zyxel-bg);
+  color: var(--zyxel-fg);
+}
+
+.ext-tool-icon {
+  font-size: 16px;
+  min-width: 20px;
+  text-align: center;
+}
+
+.ext-tool-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.ext-tool-name {
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.ext-tool-desc {
+  font-size: 11px;
+  color: var(--gray-600);
+  margin-top: 1px;
+}
+
+.ext-tool-link:hover .ext-tool-desc {
+  color: var(--zyxel-fg);
+  opacity: .8;
+}
+
+.ext-tool-arrow {
+  font-size: 13px;
+  color: var(--gray-400);
+  flex-shrink: 0;
+}
+
+.ext-tool-link:hover .ext-tool-arrow {
+  color: var(--zyxel-fg);
 }
