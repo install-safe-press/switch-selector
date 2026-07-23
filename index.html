@@ -29,7 +29,7 @@
         <button class="mode-tab active" role="tab" aria-selected="true"
                 onclick="switchMode('menu')">選單篩選</button>
         <button class="mode-tab" role="tab" aria-selected="false"
-                onclick="switchMode('llm')">描述需求(未啟用)</button>
+                onclick="switchMode('llm')">描述需求</button>
       </div>
 
     </div>
@@ -154,7 +154,7 @@
       <div class="section-label">描述需求</div>
       <div class="llm-textarea-wrap">
         <textarea id="llm-input"
-          placeholder="用自己的話描述需求，例如：兩層樓各 15 台 AP，需要 PoE 集中管理，希望可以遠端監控…(本功能需要$$徵求贊助)"
+          placeholder="用自己的話描述需求，例如：兩層樓各 15 台 AP，需要 PoE 集中管理，希望可以遠端監控…"
           aria-label="需求描述輸入框"></textarea>
         <div class="llm-footer">
           <span>Claude AI 解析後自動篩選</span>
@@ -168,45 +168,6 @@
       <div id="llm-parsed" class="llm-parsed" aria-live="polite"></div>
 
     </div>
-    <!-- 外部工具連結 -->
-    <div class="ext-tools">
-      <div class="section-label">廠商選品工具</div>
-
-      <a href="https://event.zyxel.com/Product_Selector/Switch/" target="_blank" class="ext-tool-link">
-        <div class="ext-tool-icon">🔗</div>
-        <div class="ext-tool-body">
-          <div class="ext-tool-name">ZyXEL 交換器選擇器</div>
-          <div class="ext-tool-desc">乙太網路交換器快速選擇工具</div>
-        </div>
-        <div class="ext-tool-arrow">↗</div>
-      </a>
-
-        <a href="https://www.juniper.net/documentation/" target="_blank" class="ext-tool-link">
-        <div class="ext-tool-icon">🔗</div>
-        <div class="ext-tool-body">
-          <div class="ext-tool-name">HPE JuniperNetworking</div>
-          <div class="ext-tool-desc">點右上方 ASK AI 可輸入中文提問</div>
-        </div>
-        <div class="ext-tool-arrow">↗</div>
-      </a>
-    
-    <a href="https://www.cisco.com/c/en/us/products/switches/switch-selector.html" target="_blank" class="ext-tool-link">
-        <div class="ext-tool-icon">🔗</div>
-        <div class="ext-tool-body">
-          <div class="ext-tool-name">Cisco Switch Selector</div>
-          <div class="ext-tool-desc">就算沒賣也可以參考</div>
-        </div>
-        <div class="ext-tool-arrow">↗</div>
-      </a>
-    
-    </div>
-
-
-
-
-
-
-    
   </aside>
 
   <!-- 右欄：結果 -->
@@ -232,6 +193,30 @@
 <footer class="page-footer">
   © 2025 Your Company｜Dell・HPE・ZyXEL 授權代理商
 </footer>
+
+<!-- ── 比較列（底部浮動）────────────────────────────────── -->
+<div id="compare-bar" class="compare-bar">
+  <div class="compare-bar-inner">
+    <div id="compare-names" class="compare-names"></div>
+    <button id="compare-btn" class="compare-btn" onclick="openCompareModal()" disabled>
+      比較型號
+    </button>
+    <button class="compare-clear" onclick="compareList=[];updateCompareBar();updateCheckboxes();">清除</button>
+  </div>
+</div>
+
+<!-- ── 比較 Modal ─────────────────────────────────────────── -->
+<div id="compare-modal" class="modal-overlay">
+  <div class="modal-box">
+    <div class="modal-header">
+      <span class="modal-title">規格比較</span>
+      <button class="modal-close" onclick="closeCompareModal()" aria-label="關閉">×</button>
+    </div>
+    <div class="modal-body">
+      <div id="compare-table-wrap" class="cmp-table-wrap"></div>
+    </div>
+  </div>
+</div>
 
 <!-- ── Scripts ────────────────────────────────────────────── -->
 <script src="config.js"></script>

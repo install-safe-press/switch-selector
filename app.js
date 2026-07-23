@@ -1,6 +1,6 @@
 // ============================================================
 // app.js — 主要邏輯
-// v3：欄位索引修正（18欄），mgmt 正規化補全，移除詢價功能
+// v4：比較功能（Modal），移除詢價，修正欄位索引
 // ============================================================
 
 // ── 狀態 ──────────────────────────────────────────────────
@@ -14,6 +14,9 @@ let filters = {
   uplink: 0,
   brand: "all",
 };
+
+// 比較清單（最多 3 台）
+let compareList = [];
 
 // ── 讀取 Google Sheets CSV ────────────────────────────────
 async function loadProducts() {
@@ -50,15 +53,14 @@ async function loadProducts() {
         }
         cols.push(cur.trim());
 
-        // port_speed 防呆：若 Sheets 誤存成日期字串則 fallback 為 1
+        // port_speed 防呆
         const rawSpeed = cols[4] || "";
         let portSpeed = parseFloat(rawSpeed);
         if (isNaN(portSpeed) || rawSpeed.includes("-") || rawSpeed.includes("/")) {
           portSpeed = 1;
         }
 
-        // mgmt_level 正規化：統一合併為 unmanaged / l2 / l2+ / l3
-        // web、smart、簡易網管、純數字 → 一律歸類為 l2
+        // mgmt_level 正規化
         let mgmt = (cols[8] || "l2").trim().toLowerCase();
         if (["web", "smart", "簡易網管"].includes(mgmt) || !isNaN(parseFloat(mgmt))) {
           mgmt = "l2";
@@ -66,12 +68,11 @@ async function loadProducts() {
           mgmt = "l2";
         }
 
-        // poe_type 正規化：「poe」→「poe+」
+        // poe_type 正規化
         let poeType = (cols[5] || "none").trim().toLowerCase();
         if (poeType === "poe") poeType = "poe+";
 
-        // supports_multigig：從 port_speed 自動判斷（2.5G = Multi-Gig）
-        // 等 Sheets 新增欄位後再改為讀取 cols[16]
+        // supports_multigig
         const supportsMultigig = portSpeed === 2.5;
 
         return {
@@ -91,9 +92,9 @@ async function loadProducts() {
           highlights:        cols[13] ? cols[13].split(/[|,]/).map((h) => h.trim()).filter(Boolean) : [],
           description:       (cols[14] || "").trim(),
           datasheet_url:     (cols[15] || "").trim(),
-          supports_multigig: portSpeed === 2.5,   // 暫由 port_speed 判斷
-          is_active:         cols[16] === "TRUE", // col[16]
-          sort_weight:       parseInt(cols[17])  || 50, // col[17]
+          supports_multigig: supportsMultigig,
+          is_active:         cols[16] === "TRUE",
+          sort_weight:       parseInt(cols[17]) || 50,
         };
       })
       .filter((p) => p.is_active && p.model && p.brand);
@@ -109,7 +110,6 @@ async function loadProducts() {
 function scoreProduct(p) {
   let score = 0;
 
-  // 場景符合 (+30)
   const sceneMap = {
     office: p.scene_office,
     idc:    p.scene_idc,
@@ -118,7 +118,7 @@ function scoreProduct(p) {
   };
   if (sceneMap[filters.scene]) score += 30;
 
-  // Port 數量（鄰近度遞減：超出越多分數越低，避免旗艦機種洗版）
+  // Port 數量（鄰近度遞減）
   if (filters.port > 0) {
     if (p.port_count < parseInt(filters.port)) return null;
     const ratio = p.port_count / parseInt(filters.port);
@@ -129,13 +129,12 @@ function scoreProduct(p) {
     score += 8;
   }
 
-  // Port 速度（Multi-Gig 獨立路徑，不與其他速度混用倍數比較）
+  // Port 速度（Multi-Gig 獨立路徑）
   if (filters.speed === "multigig") {
     if (!p.supports_multigig) return null;
     score += 15;
   } else if (filters.speed > 0) {
     if (p.port_speed < parseFloat(filters.speed)) return null;
-    // Multi-Gig 機種不參與 10G 以上的固定速度篩選
     if (p.supports_multigig && parseFloat(filters.speed) >= 10) return null;
     const ratio = p.port_speed / parseFloat(filters.speed);
     if (ratio <= 2) score += 15;
@@ -145,7 +144,7 @@ function scoreProduct(p) {
     score += 8;
   }
 
-  // PoE 需求（硬篩）
+  // PoE 需求
   const poeOrder = { none: 0, "poe+": 1, "poe++": 2 };
   const needPoe = poeOrder[filters.poe] ?? 0;
   const hasPoe  = poeOrder[p.poe_type]  ?? 0;
@@ -153,8 +152,6 @@ function scoreProduct(p) {
   score += needPoe > 0 ? 15 : 5;
 
   // 管理層級
-  // unmanaged 精確比對：選了只顯示無網管機種
-  // l2/l2+/l3 向上相容：選低階也看到高階
   if (filters.mgmt === "unmanaged" && p.mgmt_level !== "unmanaged") return null;
   const mgmtOrder = { unmanaged: 0, l2: 1, "l2+": 2, l3: 3 };
   const needMgmt = mgmtOrder[filters.mgmt] ?? -1;
@@ -162,18 +159,135 @@ function scoreProduct(p) {
   if (filters.mgmt !== "unmanaged" && needMgmt >= 0 && hasMgmt < needMgmt) return null;
   score += needMgmt >= 0 ? 10 : 5;
 
-  // Uplink（硬篩）
+  // Uplink
   if (filters.uplink > 0 && p.uplink_speed < parseInt(filters.uplink)) return null;
   score += filters.uplink > 0 ? 10 : 5;
 
-  // 品牌偏好（硬篩）
+  // 品牌
   if (filters.brand !== "all" && p.brand !== filters.brand) return null;
   if (filters.brand !== "all") score += 5;
 
-  // sort_weight 加成（最多 +10）
+  // sort_weight
   score += Math.round((p.sort_weight / 100) * 10);
 
   return Math.min(score, 100);
+}
+
+// ── 比較清單管理 ──────────────────────────────────────────
+function toggleCompare(model) {
+  const idx = compareList.findIndex((p) => p.model === model);
+  if (idx >= 0) {
+    compareList.splice(idx, 1);
+  } else {
+    if (compareList.length >= 3) {
+      alert("最多只能勾選 3 台進行比較");
+      return;
+    }
+    const product = allProducts.find((p) => p.model === model);
+    if (product) compareList.push(product);
+  }
+  updateCompareBar();
+  updateCheckboxes();
+}
+
+function updateCompareBar() {
+  const bar = document.getElementById("compare-bar");
+  const btn = document.getElementById("compare-btn");
+  const names = document.getElementById("compare-names");
+  if (!bar) return;
+
+  if (compareList.length > 0) {
+    bar.classList.add("show");
+    names.innerHTML = compareList.map((p) =>
+      `<span class="cmp-tag">${p.brand} ${p.model}
+        <button onclick="removeCompare('${p.model}')" aria-label="移除">×</button>
+      </span>`
+    ).join("");
+    btn.disabled = compareList.length < 2;
+    btn.textContent = compareList.length < 2
+      ? "再選 1 台即可比較"
+      : `比較 ${compareList.length} 台型號`;
+  } else {
+    bar.classList.remove("show");
+  }
+}
+
+function removeCompare(model) {
+  compareList = compareList.filter((p) => p.model !== model);
+  updateCompareBar();
+  updateCheckboxes();
+}
+
+function updateCheckboxes() {
+  document.querySelectorAll(".cmp-checkbox").forEach((cb) => {
+    const model = cb.dataset.model;
+    const inList = compareList.some((p) => p.model === model);
+    cb.checked = inList;
+    cb.disabled = !inList && compareList.length >= 3;
+  });
+}
+
+// ── 比較 Modal ────────────────────────────────────────────
+function openCompareModal() {
+  if (compareList.length < 2) return;
+
+  const rows = [
+    { label: "品牌",     key: (p) => p.brand },
+    { label: "產品線",   key: (p) => p.product_line || "—" },
+    { label: "Port 數",  key: (p) => p.port_count + " port" },
+    { label: "Port 速度", key: (p) => p.port_speed >= 1000 ? p.port_speed + "G" : p.port_speed === 2.5 ? "2.5G (Multi-Gig)" : p.port_speed + "G" },
+    { label: "PoE 類型", key: (p) => p.poe_type === "none" ? "無" : p.poe_type.toUpperCase() },
+    { label: "PoE 預算", key: (p) => p.poe_budget_w > 0 ? p.poe_budget_w + "W" : "—" },
+    { label: "Uplink",   key: (p) => p.uplink_speed + "G" },
+    { label: "管理層級", key: (p) => ({ unmanaged: "無網管", l2: "基礎管理 (L2)", "l2+": "進階管理 (L2+)", l3: "完整路由 (L3)" }[p.mgmt_level] || p.mgmt_level) },
+    { label: "適用場景", key: (p) => [p.scene_office && "辦公室", p.scene_idc && "機房", p.scene_smb && "SMB", p.scene_av && "監控"].filter(Boolean).join("、") || "—" },
+    { label: "亮點規格", key: (p) => p.highlights.join(" / ") || "—" },
+    { label: "匹配分數", key: (p) => (p.score !== undefined ? p.score + "%" : "—"), isScore: true },
+    { label: "規格書",   key: (p) => p.datasheet_url ? `<a href="${p.datasheet_url}" target="_blank" class="ds-link">開啟 ↗</a>` : "—" },
+  ];
+
+  // 找出數值差異欄位（同一欄數值不同的欄位加標記）
+  const diffFields = new Set();
+  rows.forEach((row, ri) => {
+    const vals = compareList.map((p) => row.key(p));
+    if (new Set(vals).size > 1) diffFields.add(ri);
+  });
+
+  const thCols = compareList.map((p) => {
+    const brandClass = p.brand.toLowerCase().replace(/\s/g, "-");
+    const score = p.score !== undefined ? `<span class="modal-score">${p.score}%</span>` : "";
+    return `<th>
+      <span class="brand-tag brand-tag--${brandClass}">${p.brand}</span>
+      <div class="modal-model">${p.model}</div>
+      ${score}
+    </th>`;
+  }).join("");
+
+  const bodyRows = rows.map((row, ri) => {
+    const isDiff = diffFields.has(ri);
+    const tds = compareList.map((p) => {
+      const val = row.key(p);
+      return `<td class="${isDiff ? "diff-cell" : ""} ${row.isScore ? "score-cell" : ""}">${val}</td>`;
+    }).join("");
+    return `<tr class="${isDiff ? "diff-row" : ""}">
+      <td class="row-label">${row.label} ${isDiff ? '<span class="diff-badge">差異</span>' : ""}</td>
+      ${tds}
+    </tr>`;
+  }).join("");
+
+  const modal = document.getElementById("compare-modal");
+  document.getElementById("compare-table-wrap").innerHTML = `
+    <table class="cmp-table">
+      <thead><tr><th class="row-label">規格項目</th>${thCols}</tr></thead>
+      <tbody>${bodyRows}</tbody>
+    </table>`;
+  modal.classList.add("show");
+  document.body.style.overflow = "hidden";
+}
+
+function closeCompareModal() {
+  document.getElementById("compare-modal").classList.remove("show");
+  document.body.style.overflow = "";
 }
 
 // ── 渲染結果 ──────────────────────────────────────────────
@@ -205,11 +319,19 @@ function render() {
     return;
   }
 
+  // 重設比較清單的 score 欄位
+  compareList.forEach((cp) => {
+    const found = results.find((r) => r.model === cp.model);
+    if (found) cp.score = found.score;
+  });
+
   el.innerHTML = top.map((p, i) => {
     const brandClass = p.brand.toLowerCase().replace(/\s/g, "-");
     const dsLink = p.datasheet_url
       ? `<a href="${p.datasheet_url}" target="_blank" class="ds-link">規格書 ↗</a>`
       : "";
+    const inCompare = compareList.some((c) => c.model === p.model);
+    const cbDisabled = !inCompare && compareList.length >= 3 ? "disabled" : "";
     return `
     <div class="card ${i === 0 ? "card--top" : ""}">
       <div class="card-rank">${MEDALS[i]}</div>
@@ -228,6 +350,15 @@ function render() {
         <span class="score-badge">${p.score}%</span>
         <div class="card-actions">
           ${dsLink}
+          <label class="cmp-label" title="${compareList.length >= 3 && !inCompare ? "最多比較3台" : "加入比較"}">
+            <input type="checkbox"
+              class="cmp-checkbox"
+              data-model="${p.model}"
+              ${inCompare ? "checked" : ""}
+              ${cbDisabled}
+              onchange="toggleCompare('${p.model}')">
+            比較
+          </label>
         </div>
       </div>
     </div>`;
@@ -372,4 +503,17 @@ async function parseLLM() {
 document.addEventListener("DOMContentLoaded", () => {
   bindMenuFilters();
   loadProducts();
+
+  // 點 Modal 背景關閉
+  const modal = document.getElementById("compare-modal");
+  if (modal) {
+    modal.addEventListener("click", (e) => {
+      if (e.target === modal) closeCompareModal();
+    });
+  }
+
+  // ESC 關閉
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") closeCompareModal();
+  });
 });
